@@ -7,24 +7,46 @@ import enum
 
 dispatcher = asyncio_dispatcher.AsyncioDispatcher()
 
+noOfAbsorbers = 2
+dom = "FE99B"
 
-v1 = valveRecord("FE99I-VA-VALVE-01")
-v2 = valveRecord("FE99I-VA-VALVE-02")
-absb1 = valveRecord("FE99I-RS-ABSB-01")
-absb2 = valveRecord("FE99I-RS-ABSB-02")
-sht1 = valveRecord("FE99I-PS-SHTR-01")
-sht2 = valveRecord("FE99I-PS-SHTR-02")
-fv = fvalveRecord("FE99I-VA-FVALV-01")
+v1 = valveRecord(f"{dom}-VA-VALVE-01")
+v2 = valveRecord(f"{dom}-VA-VALVE-02")
+absb1 = valveRecord(f"{dom}-RS-ABSB-01")
+sht1 = valveRecord(f"{dom}-PS-SHTR-01")
+sht2 = valveRecord(f"{dom}-PS-SHTR-02")
+fv = fvalveRecord(f"{dom}-VA-FVALV-01")
 
-absb2.addOpenRequirement(v2)
-absb2.addOpenRequirement(sht1)
-absb2.addOpenRequirement(sht2)
+if noOfAbsorbers > 1:
+    absb2 = valveRecord(f"{dom}-RS-ABSB-02")
+    absb2.addOpenRequirement(v2)
+    absb2.addOpenRequirement(sht1)
+    absb2.addOpenRequirement(sht2)
 
-absb1.addOpenRequirement(v1)
-absb1.addOpenRequirement(fv)
+    absb1.addOpenRequirement(v1)
+    absb1.addOpenRequirement(fv)
+else:
+    absb1.addOpenRequirement(v1)
+    absb1.addOpenRequirement(fv)
+    absb1.addOpenRequirement(sht1)
+    absb1.addOpenRequirement(sht2)
+    absb1.addOpenRequirement(v2)
 
 
+# Create BLCON PV
+builder.SetDeviceName(f"{dom}-CS-BEAM-01")
+builder.mbbOut("BLCON",
+                "Open",
+                "Close",
+                "Abort", 
+                "Arm", always_update=True)
 
+builder.mbbOut("STA",
+            "Fault",
+            "Open",
+            "Opening",
+            "Closed",
+            "Closing")
 
 # Boilerplate get the IOC started
 builder.LoadDatabase()

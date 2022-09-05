@@ -17,7 +17,7 @@ class valveRecord:
                                 "Open",
                                 "Opening",
                                 "Closed",
-                                "Closing")
+                                "Closing",initial_value = 3)
 
         self.ilkStaVals = ["Failed","Run Ilks Ok","OK","Disarmed"]
         self.ilkStaPV = builder.mbbIn("ILKSTA",
@@ -82,6 +82,9 @@ class valveRecord:
             self.staPV.set(4)
             sleep(0.5)
             self.staPV.set(3)
+        
+        # Make interlocks fail even if valve is aleady closed
+        self.ilkStaPV.set(0)
 
     def reset(self):
         okToReset = True
@@ -107,7 +110,7 @@ class fvalveRecord(valveRecord):
                                 "Closed",
                                 "Closing",
                                 "Open Disarmed",
-                                "Partially Armed")
+                                "Partially Armed",initial_value = 3)
 
 
         self.ilkStaVals = ["Failed","Run Ilks Ok","OK","Disarmed"]
