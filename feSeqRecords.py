@@ -7,10 +7,10 @@ from softioc.builder import records
 
 class valveRecord:
     # Works for: BEAM,ABSB,SHTR,V2,
-    def __init__(self,prefix,openList = list()):
+    def __init__(self,prefix):
         builder.SetDeviceName(prefix)
-        self.openList = openList
-        self.safeToOpen = False
+        self.openList = list()
+        self.observerList = list()
         self.staVals = ["Fault","Open","Opening","Closed","Closing"]
         self.staPV = builder.mbbIn("STA",
                                 "Fault",
@@ -39,45 +39,66 @@ class valveRecord:
         self.modePV = builder.boolIn("MODE",
                                     "Operational",
                                     "Service")
-    
+        
 
     def processCommand(self,value):
-        if(self.conVals[value] == "Open"):
-            self.safeToOpen = True
-
-            if len(self.openList) > 0:
-                for pv in self.openList:
-                    if pv.staVals[pv.staPV.get()] != "Open":
-                        self.safeToOpen = False
-
-            if self.safeToOpen:
-                self.open()
-        if(self.conVals[value] == "Close"):
+        if self.conVals[value] == "Open":
+            self.open()
+        if self.conVals[value] == "Close":
             self.close()
-        if(self.conVals[value] == "Reset"):
+        if self.conVals[value] == "Reset":
             self.reset()
         self.lastConPV.set(value)
 
 
+    def addOpenRequirement(self,pv):
+        self.openList.append(pv)
+        pv.addObserver(self)
+
+    def addObserver(self,pv):
+        self.observerList.append(pv)
+
+    def closeObservingValves(self):
+        for pv in self.observerList:
+            pv.reactiveClose()
 
     def open(self):
-        self.staPV.set(2)
-        sleep(0.5)
-        self.staPV.set(1)
+        if self.staVals[self.staPV.get()] != "Open" and self.ilkStaVals[self.ilkStaPV.get()] == "OK":
+            self.staPV.set(2)
+            sleep(0.5)
+            self.staPV.set(1)
     
     def close(self):
-        self.staPV.set(4)
-        sleep(0.5)
-        self.staPV.set(3)
+        self.closeObservingValves()
+        if self.staVals[self.staPV.get()] != "Closed":
+            self.staPV.set(4)
+            sleep(0.5)
+            self.staPV.set(3)
+
+    def reactiveClose(self):
+        self.closeObservingValves()
+        if self.staVals[self.staPV.get()] != "Closed":
+            self.ilkStaPV.set(0)
+            self.staPV.set(4)
+            sleep(0.5)
+            self.staPV.set(3)
 
     def reset(self):
-        sleep(0.5)
-        self.ilkStaPV.set(2)
+        okToReset = True
+        for pv in self.openList:
+            if "Open" not in pv.staVals[pv.staPV.get()]:
+                okToReset = False
+        
+        if okToReset:
+            sleep(0.5)
+            self.ilkStaPV.set(2)
 
 
-class fvalveRecord():
+class fvalveRecord(valveRecord):
     def __init__(self,prefix):
         builder.SetDeviceName(prefix)
+        self.openList = list()
+        self.observerList = list()
         self.staVals = ["Fault","Open Armed","Opening","Closed","Closing","Open Disarmed","Partially Armed"]
         self.staPV = builder.mbbIn("STA",
                                 "Fault",
@@ -118,18 +139,16 @@ class fvalveRecord():
 
 
     def processCommand(self,value):
-        if(self.conVals[value] == "Arm"):
+        super().processCommand(value)
+        if self.conVals[value] == "Arm":
             self.arm()
-        if(self.conVals[value] == "Reset"):
-            self.reset()
-        self.lastConPV.set(value)
+
+    def open(self):
+        if self.staVals[self.staPV.get()] != "Open" and self.ilkStaVals[self.ilkStaPV.get()] == "OK":
+            self.staPV.set(2)
+            sleep(0.5)
+            self.staPV.set(5)
 
     def arm(self):
-        self.staPV.set(2)
-        sleep(0.5)
-        self.staPV.set(1)
-    
-    def reset(self):
-        sleep(0.5)
-        self.ilkStaPV.set(2)
-
+        if "Open" in self.staVals[self.staPV.get()]:
+            self.staPV.set(1)

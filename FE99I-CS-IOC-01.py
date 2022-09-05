@@ -7,15 +7,25 @@ import enum
 
 dispatcher = asyncio_dispatcher.AsyncioDispatcher()
 
+
 v1 = valveRecord("FE99I-VA-VALVE-01")
 v2 = valveRecord("FE99I-VA-VALVE-02")
 absb1 = valveRecord("FE99I-RS-ABSB-01")
+absb2 = valveRecord("FE99I-RS-ABSB-02")
 sht1 = valveRecord("FE99I-PS-SHTR-01")
 sht2 = valveRecord("FE99I-PS-SHTR-02")
 fv = fvalveRecord("FE99I-VA-FVALV-01")
 
+absb2.addOpenRequirement(v2)
+absb2.addOpenRequirement(sht1)
+absb2.addOpenRequirement(sht2)
 
-absb2 = valveRecord("FE99I-RS-ABSB-02",[v2,sht1,sht2])
+absb1.addOpenRequirement(v1)
+absb1.addOpenRequirement(fv)
+
+
+
+
 # Boilerplate get the IOC started
 builder.LoadDatabase()
 softioc.iocInit(dispatcher)
