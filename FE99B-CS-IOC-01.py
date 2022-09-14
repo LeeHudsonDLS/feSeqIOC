@@ -39,7 +39,7 @@ builder.mbbOut("BLCON",
                 "Open",
                 "Close",
                 "Abort", 
-                "Arm", always_update=True)
+                "Unknown", always_update=True,initial_value = 3)
 
 builder.mbbOut("STA",
             "Fault",

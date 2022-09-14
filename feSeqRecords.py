@@ -39,6 +39,9 @@ class valveRecord:
         self.modePV = builder.boolIn("MODE",
                                     "Operational",
                                     "Service")
+
+        self.openingDelayPV = builder.aOut("OPEN_DELAY",initial_value = 0.5)
+        self.closingDelayPV = builder.aOut("CLOSE_DELAY",initial_value = 0.5)
         
 
     def processCommand(self,value):
@@ -65,14 +68,16 @@ class valveRecord:
     def open(self):
         if self.staVals[self.staPV.get()] != "Open" and self.ilkStaVals[self.ilkStaPV.get()] == "OK":
             self.staPV.set(2)
-            sleep(0.5)
+            delay = self.openingDelayPV.get()
+            sleep(delay)
             self.staPV.set(1)
     
     def close(self):
         self.closeObservingValves()
         if self.staVals[self.staPV.get()] != "Closed":
             self.staPV.set(4)
-            sleep(0.5)
+            delay = self.closingDelayPV.get()
+            sleep(delay)
             self.staPV.set(3)
 
     def reactiveClose(self):
@@ -139,6 +144,8 @@ class fvalveRecord(valveRecord):
                                     "Operational",
                                     "Service")
     
+        self.openingDelayPV = builder.aOut("OPEN_DELAY",initial_value = 0.5)
+        self.closingDelayPV = builder.aOut("CLOSE_DELAY",initial_value = 0.5)
 
 
     def processCommand(self,value):
@@ -149,7 +156,8 @@ class fvalveRecord(valveRecord):
     def open(self):
         if self.staVals[self.staPV.get()] != "Open" and self.ilkStaVals[self.ilkStaPV.get()] == "OK":
             self.staPV.set(2)
-            sleep(0.5)
+            delay = self.openingDelayPV.get()
+            sleep(delay)
             self.staPV.set(5)
 
     def arm(self):
