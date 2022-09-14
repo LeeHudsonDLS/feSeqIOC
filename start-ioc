@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# Python Soft IOC path
+
+PYIOC=/dls_sw/prod/python3/RHEL7-x86_64/softioc/4.0.1/prefix/bin/pythonSoftIOC
+
+cd "$(dirname "$0")"
+exec $PYIOC FE99B-CS-IOC-01.py "$@"
+
